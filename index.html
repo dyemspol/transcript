@@ -3,18 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.assemblyai.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; media-src 'self' blob:; object-src 'none'; frame-src 'none'; script-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.assemblyai.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; media-src 'self' blob:; object-src 'none'; frame-src 'none'; script-src 'self' https://cdnjs.cloudflare.com;">
     <title>Scribe - Audio Transcription</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tab-styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
 </head>
-<body>
+<body class="locked">
+    <!-- ══════════════ AUTH OVERLAY ══════════════ -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2 class="auth-title">Secure Access</h2>
+            <p class="auth-subtitle">Enter your password to unlock Scribe.</p>
+            
+            <form id="auth-form">
+                <div class="auth-input-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" class="auth-input" placeholder="••••••••" required>
+                    <div id="auth-error" class="auth-error"></div>
+                </div>
+                
+                <button type="submit" class="auth-btn">
+                    <span>Unlock Workspace</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+            </form>
+        </div>
+    </div>
     <div class="app-container">
-        
-        <!-- Left Panel: Controls, Upload, Audio -->
+
+        <!-- ══════════════ LEFT SIDEBAR ══════════════ -->
         <aside class="sidebar glass-panel">
+
+            <!-- Branding -->
             <header class="app-header">
                 <div class="logo">
                     <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -24,42 +54,101 @@
                     </svg>
                     <h1>Scribe</h1>
                 </div>
-                <p class="subtitle">AI-Powered Transcription</p>
+                <p class="subtitle">AI-Powered Audio Tools</p>
             </header>
 
-            <section class="settings-section">
-                <label for="api-key">AssemblyAI API Key</label>
-                <input type="password" id="api-key" value="6f55cfe5134e48038dcdc0bb28e61b73" readonly>
-                <p class="helper-text">Key is configured for this deployment.</p>
-            </section>
+            <!-- Mode Tab Switcher -->
+            <div class="tab-switcher" role="tablist">
+                <button class="tab-btn active" id="tab-transcribe" data-tab="transcribe" role="tab" aria-selected="true">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                    Transcribe
+                </button>
+                <button class="tab-btn" id="tab-merge" data-tab="merge" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h10"/><path d="M9 4l8 8-8 8"/><path d="M22 4l-5 8 5 8"/></svg>
+                    Merge Audio
+                </button>
+            </div>
 
-            <section class="upload-section">
-                <div id="drop-zone" class="drop-zone">
-                    <input type="file" id="file-input" accept="audio/mp3, audio/wav, audio/m4a, audio/mpeg" hidden>
-                    <div class="upload-icon">
-                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
+            <!-- ─── TRANSCRIBE TAB ─── -->
+            <div id="panel-transcribe" class="tab-panel">
+                <section class="settings-section">
+                    <label for="api-key">AssemblyAI API Key</label>
+                    <input type="password" id="api-key" value="6f55cfe5134e48038dcdc0bb28e61b73" readonly>
+                    <p class="helper-text">Key is configured for this deployment.</p>
+                </section>
+
+                <section class="upload-section">
+                    <div id="drop-zone" class="drop-zone">
+                        <input type="file" id="file-input" accept="audio/mp3, audio/wav, audio/m4a, audio/mpeg" hidden>
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <span class="upload-text">Drag & drop audio here</span>
+                        <span class="upload-subtext">or click to browse (MP3, WAV, M4A)</span>
                     </div>
-                    <span class="upload-text">Drag & drop audio here</span>
-                    <span class="upload-subtext">or click to browse (MP3, WAV, M4A)</span>
-                </div>
-            </section>
+                </section>
 
-            <section class="player-section hidden" id="player-container">
-                <audio id="audio-player" controls></audio>
-                <div class="transcribe-action">
-                    <button id="btn-transcribe" class="btn-primary">
-                        <span>Transcribe Audio</span>
-                    </button>
-                </div>
-            </section>
+                <section class="player-section hidden" id="player-container">
+                    <audio id="audio-player" controls></audio>
+                    <div class="transcribe-action">
+                        <button id="btn-transcribe" class="btn-primary">
+                            <span>Transcribe Audio</span>
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ─── MERGE TAB ─── -->
+            <div id="panel-merge" class="tab-panel hidden">
+                <section class="upload-section">
+                    <div id="merge-drop-zone" class="drop-zone">
+                        <input type="file" id="merge-file-input" accept="audio/mp3, audio/wav, audio/m4a, audio/mpeg" multiple hidden>
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12h10"/><path d="M9 4l8 8-8 8"/><path d="M22 4l-5 8 5 8"/>
+                            </svg>
+                        </div>
+                        <span class="upload-text">Select audio parts to merge</span>
+                        <span class="upload-subtext">Hold Ctrl/⌘ to pick multiple files</span>
+                    </div>
+                </section>
+
+                <section class="player-section hidden" id="merge-player-container">
+                    <audio id="merge-audio-player" controls></audio>
+                    <div class="transcribe-action">
+                        <button id="btn-do-merge" class="btn-primary">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h10"/><path d="M9 4l8 8-8 8"/><path d="M22 4l-5 8 5 8"/></svg>
+                            <span>Merge Audio Parts</span>
+                        </button>
+                    </div>
+
+                    <!-- Download card — revealed after successful merge -->
+                    <div id="merge-download-card" class="merge-download-card hidden">
+                        <div class="merge-download-card-left">
+                            <div class="merge-success-icon">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <div>
+                                <p class="merge-success-title">Merged Successfully</p>
+                                <p class="merge-success-meta" id="merge-file-meta">—</p>
+                            </div>
+                        </div>
+                        <button id="btn-merge-download" class="btn-download-pro">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download .MP3
+                        </button>
+                    </div>
+                </section>
+            </div>
+
         </aside>
 
-        <!-- Right Panel: Timeline & Transcript -->
-        <main class="main-content glass-panel">
+        <!-- ══════════════ RIGHT PANEL — TRANSCRIBE ══════════════ -->
+        <main class="main-content glass-panel" id="right-transcribe">
             <header class="main-header">
                 <h2>Transcript</h2>
                 <div class="actions hidden" id="export-actions">
@@ -77,23 +166,50 @@
                     </button>
                 </div>
             </header>
-
             <div id="status-container" class="status-container">
                 <div class="empty-state">
-                    <div class="wave-animation">
-                        <span></span><span></span><span></span><span></span><span></span>
-                    </div>
+                    <div class="wave-animation"><span></span><span></span><span></span><span></span><span></span></div>
                     <p id="status-text">Upload an audio file to begin</p>
                 </div>
             </div>
-
-            <div id="timeline-container" class="timeline-container hidden">
-                <!-- Utterances will be injected here -->
-            </div>
+            <div id="timeline-container" class="timeline-container hidden"></div>
         </main>
-        
+
+        <!-- ══════════════ RIGHT PANEL — MERGE ══════════════ -->
+        <main class="main-content glass-panel hidden" id="right-merge">
+            <header class="main-header">
+                <h2>Audio Files</h2>
+                <div id="merge-header-actions" class="actions" style="display:none;">
+                    <span id="merge-count-badge" class="merge-count-badge">0 files</span>
+                    <button id="btn-merge-clear" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                        Clear All
+                    </button>
+                </div>
+            </header>
+
+            <!-- Empty / Processing state -->
+            <div id="merge-status-container" class="status-container">
+                <div class="empty-state">
+                    <div class="wave-animation" id="merge-wave"><span></span><span></span><span></span><span></span><span></span></div>
+                    <p id="merge-status-text">Select 2 or more audio files to merge</p>
+                    <div id="merge-progress-wrap" class="merge-progress-wrap hidden">
+                        <div class="merge-progress-track">
+                            <div id="merge-progress-fill" class="merge-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File list -->
+            <div id="merge-file-list" class="timeline-container hidden"></div>
+        </main>
+
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script src="merge.js"></script>
 </body>
 </html>
