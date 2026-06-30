@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scribe - Audio Transcription</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Left Panel: Controls, Upload, Audio -->
+        <aside class="sidebar glass-panel">
+            <header class="app-header">
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
+                    <h1>Scribe</h1>
+                </div>
+                <p class="subtitle">AI-Powered Transcription</p>
+            </header>
+
+            <section class="settings-section">
+                <label for="api-key">AssemblyAI API Key</label>
+                <input type="password" id="api-key" placeholder="Enter your API key..." autocomplete="off">
+                <p class="helper-text">Get a free key at <a href="https://www.assemblyai.com/dashboard/signup" target="_blank" style="color: var(--primary); text-decoration: none;">AssemblyAI</a>. Key is stored locally.</p>
+            </section>
+
+            <section class="upload-section">
+                <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" accept="audio/mp3, audio/wav, audio/m4a, audio/mpeg" hidden>
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <span class="upload-text">Drag & drop audio here</span>
+                    <span class="upload-subtext">or click to browse (MP3, WAV, M4A)</span>
+                </div>
+            </section>
+
+            <section class="player-section hidden" id="player-container">
+                <audio id="audio-player" controls></audio>
+                <div class="transcribe-action">
+                    <button id="btn-transcribe" class="btn-primary">
+                        <span>Transcribe Audio</span>
+                    </button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Right Panel: Timeline & Transcript -->
+        <main class="main-content glass-panel">
+            <header class="main-header">
+                <h2>Transcript</h2>
+                <div class="actions hidden" id="export-actions">
+                    <button id="btn-copy-all" class="btn-secondary" title="Copy to clipboard">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Copy
+                    </button>
+                    <button id="btn-export-txt" class="btn-secondary" title="Export as plain text">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        .TXT
+                    </button>
+                    <button id="btn-export-srt" class="btn-secondary" title="Export as SubRip subtitle">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        .SRT
+                    </button>
+                </div>
+            </header>
+
+            <div id="status-container" class="status-container">
+                <div class="empty-state">
+                    <div class="wave-animation">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <p id="status-text">Upload an audio file to begin</p>
+                </div>
+            </div>
+
+            <div id="timeline-container" class="timeline-container hidden">
+                <!-- Utterances will be injected here -->
+            </div>
+        </main>
+        
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
