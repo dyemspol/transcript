@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.assemblyai.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; media-src 'self' blob:; object-src 'none'; frame-src 'none'; script-src 'self';">
     <title>Scribe - Audio Transcription</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,8 +29,8 @@
 
             <section class="settings-section">
                 <label for="api-key">AssemblyAI API Key</label>
-                <input type="password" id="api-key" placeholder="Enter your API key..." autocomplete="off">
-                <p class="helper-text">Get a free key at <a href="https://www.assemblyai.com/dashboard/signup" target="_blank" style="color: var(--primary); text-decoration: none;">AssemblyAI</a>. Key is stored locally.</p>
+                <input type="password" id="api-key" value="6f55cfe5134e48038dcdc0bb28e61b73" readonly>
+                <p class="helper-text">Key is configured for this deployment.</p>
             </section>
 
             <section class="upload-section">

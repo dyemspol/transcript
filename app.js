@@ -22,18 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let transcriptData = null; // Store AssemblyAI response
     let utteranceElements = []; // DOM elements for sync
 
+    const DEBUG_MODE = false;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
     // --- Initialization ---
-    const savedKey = localStorage.getItem('assemblyai_api_key');
-    if (savedKey) apiKeyInput.value = savedKey;
-    
-    apiKeyInput.addEventListener('change', (e) => {
-        localStorage.setItem('assemblyai_api_key', e.target.value.trim());
-    });
+    // (Key is hardcoded in the HTML as read-only per deployment requirements)
 
     // --- File Upload Handling ---
-    const handleFile = (file) => {
-        if (!file || !file.type.startsWith('audio/')) {
-            alert('Please select a valid audio file (MP3, WAV, M4A).');
+    const handleFile = async (file) => {
+        if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            alert('File exceeds the 50MB size limit.');
+            return;
+        }
+
+        // Strict Magic Byte Validation
+        try {
+            const buffer = await file.slice(0, 12).arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            let isValid = false;
+            // ID3 (mp3) or Sync Word (mp3)
+            if (hex.startsWith('494433') || hex.startsWith('fffb') || hex.startsWith('fff3') || hex.startsWith('fff2')) isValid = true;
+            // RIFF (wav)
+            if (hex.startsWith('52494646')) isValid = true;
+            // ftyp (m4a/mp4 - typically bytes 4-7)
+            if (hex.substring(8, 16) === '66747970') isValid = true;
+
+            if (!isValid) {
+                alert('Security Error: Invalid audio file format detected.');
+                return;
+            }
+        } catch(e) {
+            alert('Could not read file for validation.');
             return;
         }
         currentFile = file;
@@ -101,15 +124,20 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('Uploading audio...', true);
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
             // 1. Upload File
             const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
                 method: 'POST',
                 headers: { 'Authorization': apiKey },
-                body: currentFile
+                body: currentFile,
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             
             if (!uploadResponse.ok) {
-                throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+                throw new Error(`Upload failed`);
             }
             
             const uploadData = await uploadResponse.json();
@@ -140,8 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await pollTranscript(transcriptId, apiKey);
 
         } catch (error) {
-            console.error(error);
-            alert(`Error: ${error.message}`);
+            if (DEBUG_MODE) console.error(error);
+            alert(`A network or API error occurred. Please try again.`);
             setStatus('Transcription failed.', false);
             btnTranscribe.disabled = false;
             btnTranscribe.innerHTML = '<span>Transcribe Audio</span>';
@@ -166,18 +194,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (sentData.sentences) data.sentences = sentData.sentences;
                         }
                     } catch (e) {
-                        console.error('Could not fetch sentences', e);
+                if (DEBUG_MODE) console.error('Could not fetch sentences', e);
                     }
                     handleTranscriptionComplete(data);
                 } else if (data.status === 'error') {
-                    throw new Error(data.error || 'Transcription failed during processing.');
+                    throw new Error('Transcription failed during processing.');
                 } else {
                     // Still processing, poll again in 3 seconds
                     setTimeout(checkStatus, 3000);
                 }
             } catch (error) {
-                console.error(error);
-                alert(`Polling error: ${error.message}`);
+                if (DEBUG_MODE) console.error(error);
+                alert(`An error occurred while polling for results.`);
                 setStatus('Transcription failed.', false);
                 btnTranscribe.disabled = false;
                 btnTranscribe.innerHTML = '<span>Transcribe Audio</span>';
@@ -241,14 +269,22 @@ document.addEventListener('DOMContentLoaded', () => {
             el.dataset.start = u.start;
             el.dataset.end = u.end;
             
-            el.innerHTML = `
-                <div class="meta-info">
-                    <span class="timestamp" style="font-size: 0.95rem; font-weight: 600; color: var(--primary);">[${formatTime(u.start)}]</span>
-                </div>
-                <div class="transcript-text">
-                    ${u.text}
-                </div>
-            `;
+            // XSS Prevention: Secure DOM creation
+            const metaInfo = document.createElement('div');
+            metaInfo.className = 'meta-info';
+            
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp timestamp-text';
+            timestampSpan.textContent = `[${formatTime(u.start)}]`;
+            
+            metaInfo.appendChild(timestampSpan);
+            
+            const transcriptDiv = document.createElement('div');
+            transcriptDiv.className = 'transcript-text';
+            transcriptDiv.textContent = u.text; // Automatically escapes HTML
+            
+            el.appendChild(metaInfo);
+            el.appendChild(transcriptDiv);
 
             // Click segment to seek audio
             el.addEventListener('click', () => {
@@ -354,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnCopyAll.textContent = 'Copied!';
             setTimeout(() => { btnCopyAll.textContent = originalText; }, 2000);
         } catch (err) {
-            console.error('Failed to copy: ', err);
+            if (DEBUG_MODE) console.error('Failed to copy: ', err);
             alert('Failed to copy to clipboard.');
         }
     });
